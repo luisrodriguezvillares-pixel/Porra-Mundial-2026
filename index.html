@@ -120,11 +120,20 @@ const fases=["Grupos","Mejores terceros","Dieciseisavos","Octavos de Final","Cua
 let pantalla="login";
 let faseApuesta="Grupos";
 let grupoActual="Grupo A";
-let usuarioActual=JSON.parse(localStorage.getItem("usuarioActual")||"null");
 
-function usuarios(){return JSON.parse(localStorage.getItem("usuariosPorra")||"{}")}
+function safeJSON(key, fallback){
+ try{
+   return JSON.parse(localStorage.getItem(key)||fallback);
+ }catch(e){
+   return JSON.parse(fallback);
+ }
+}
+
+let usuarioActual=safeJSON("usuarioActual","null");
+
+function usuarios(){return safeJSON("usuariosPorra","{}")}
 function guardarUsuarios(d){localStorage.setItem("usuariosPorra",JSON.stringify(d))}
-function apuestas(){return JSON.parse(localStorage.getItem("apuestasPorra")||"{}")}
+function apuestas(){return safeJSON("apuestasPorra","{}")}
 function guardarApuestas(d){localStorage.setItem("apuestasPorra",JSON.stringify(d))}
 function keyPartido(p){return p[0]+"-"+p[1]+"-"+p[2]}
 
@@ -181,6 +190,7 @@ function tablaGrupoCerrada(grupo){
 }
 
 function setApuesta(k,v){
+ if(!usuarioActual || usuarioActual.admin)return;
  let d=apuestas();
  d[usuarioActual.correo]??={};
  d[usuarioActual.correo][k]=v;
@@ -188,6 +198,7 @@ function setApuesta(k,v){
 }
 
 function getApuesta(k){
+ if(!usuarioActual)return "";
  return apuestas()?.[usuarioActual.correo]?.[k]||"";
 }
 
@@ -201,21 +212,15 @@ function getResultado(k){
 
 function togglePartido(key){
  const actual=localStorage.getItem("override-partido-"+key);
- if(actual==="abierto"){
-   localStorage.removeItem("override-partido-"+key);
- }else{
-   localStorage.setItem("override-partido-"+key,"abierto");
- }
+ if(actual==="abierto")localStorage.removeItem("override-partido-"+key);
+ else localStorage.setItem("override-partido-"+key,"abierto");
  render();
 }
 
 function toggleTabla(grupo){
  const actual=localStorage.getItem("override-tabla-"+grupo);
- if(actual==="abierta"){
-   localStorage.removeItem("override-tabla-"+grupo);
- }else{
-   localStorage.setItem("override-tabla-"+grupo,"abierta");
- }
+ if(actual==="abierta")localStorage.removeItem("override-tabla-"+grupo);
+ else localStorage.setItem("override-tabla-"+grupo,"abierta");
  render();
 }
 
@@ -223,11 +228,27 @@ function registrar(){
  let apodo=regApodo.value.trim();
  let correo=regCorreo.value.trim().toLowerCase();
  let pass=regPass.value;
- if(!apodo||!correo||!pass)return alert("Rellena apodo, correo y contraseña");
+
+ if(!apodo||!correo||!pass){
+   alert("Rellena apodo, correo y contraseña");
+   return;
+ }
+
+ if(correo===ADMIN_EMAIL.toLowerCase()){
+   alert("Ese correo está reservado para el administrador");
+   return;
+ }
+
  let d=usuarios();
- if(d[correo])return alert("Ese correo ya está registrado");
+
+ if(d[correo]){
+   alert("Ese correo ya está registrado. Usa iniciar sesión.");
+   return;
+ }
+
  d[correo]={apodo,correo,pass,puntos:0,estado:"Activo"};
  guardarUsuarios(d);
+
  usuarioActual=d[correo];
  localStorage.setItem("usuarioActual",JSON.stringify(usuarioActual));
  pantalla="inicio";
@@ -235,10 +256,15 @@ function registrar(){
 }
 
 function iniciarSesion(){
- let correo=loginCorreo.value.trim().toLowerCase();
+ let login=loginCorreo.value.trim().toLowerCase();
  let pass=loginPass.value;
 
- if(correo===ADMIN_EMAIL.toLowerCase() && pass===ADMIN_PASSWORD){
+ if(!login||!pass){
+   alert("Escribe correo/apodo y contraseña");
+   return;
+ }
+
+ if(login===ADMIN_EMAIL.toLowerCase() && pass===ADMIN_PASSWORD){
    usuarioActual={apodo:"Admin",correo:ADMIN_EMAIL,admin:true,estado:"Administrador",puntos:0};
    localStorage.setItem("usuarioActual",JSON.stringify(usuarioActual));
    pantalla="resultados";
@@ -247,8 +273,30 @@ function iniciarSesion(){
  }
 
  let d=usuarios();
- if(!d[correo]||d[correo].pass!==pass)return alert("Correo o contraseña incorrectos");
- usuarioActual=d[correo];
+ let encontrado=null;
+
+ for(const correoGuardado in d){
+   const u=d[correoGuardado];
+
+   if(
+     (
+       correoGuardado.toLowerCase()===login ||
+       String(u.apodo||"").toLowerCase()===login
+     )
+     &&
+     String(u.pass)===String(pass)
+   ){
+     encontrado=u;
+     break;
+   }
+ }
+
+ if(!encontrado){
+   alert("No encuentro esa cuenta. Primero regístrate o entra con el mismo correo/apodo y contraseña.");
+   return;
+ }
+
+ usuarioActual=encontrado;
  localStorage.setItem("usuarioActual",JSON.stringify(usuarioActual));
  pantalla="inicio";
  render();
@@ -305,7 +353,7 @@ function vistaLogin(){
 
  <div class="card">
  <h2>Iniciar sesión</h2>
- <input id="loginCorreo" placeholder="Correo electrónico"><br>
+ <input id="loginCorreo" placeholder="Correo o apodo"><br>
  <input id="loginPass" type="password" placeholder="Contraseña"><br>
  <button onclick="iniciarSesion()">Entrar</button>
  </div>
@@ -396,7 +444,7 @@ function vistaApostar(){
    let partidosDelGrupo=partidosGrupo.filter(p=>p[0]===grupoActual);
    let equipos=grupos[grupoActual];
    let tablaCerrada=tablaGrupoCerrada(grupoActual);
-   let cierre= cierreTablaGrupo(grupoActual);
+   let cierre=cierreTablaGrupo(grupoActual);
 
    html+=`
    <div class="card">
