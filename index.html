@@ -223,25 +223,37 @@ function registrar(){
  let apodo=regApodo.value.trim();
  let correo=regCorreo.value.trim().toLowerCase();
  let pass=regPass.value;
+ if(!apodo||!correo||!pass)return alert("Rellena apodo, correo y contraseña");
+ let d=usuarios();
+ if(d[correo])return alert("Ese correo ya está registrado");
+ d[correo]={apodo,correo,pass,puntos:0,estado:"Activo"};
+ guardarUsuarios(d);
+ usuarioActual=d[correo];
+ localStorage.setItem("usuarioActual",JSON.stringify(usuarioActual));
+ pantalla="inicio";
+ render();
+}
 
- if(!apodo||!correo||!pass){
-   alert("Rellena apodo, correo y contraseña");
+function iniciarSesion(){
+ let correo=loginCorreo.value.trim().toLowerCase();
+ let pass=loginPass.value;
+
+ if(correo===ADMIN_EMAIL.toLowerCase() && pass===ADMIN_PASSWORD){
+   usuarioActual={apodo:"Admin",correo:ADMIN_EMAIL,admin:true,estado:"Administrador",puntos:0};
+   localStorage.setItem("usuarioActual",JSON.stringify(usuarioActual));
+   pantalla="resultados";
+   render();
    return;
  }
 
  let d=usuarios();
+ if(!d[correo]||d[correo].pass!==pass)return alert("Correo o contraseña incorrectos");
+ usuarioActual=d[correo];
+ localStorage.setItem("usuarioActual",JSON.stringify(usuarioActual));
+ pantalla="inicio";
+ render();
+}
 
- if(d[correo]){
-   alert("Ese correo ya está registrado. Inicia sesión con ese correo o con tu apodo.");
-   return;
- }
-
- d[correo]={
-   apodo:apodo,
-   correo:correo,
-   pass:pass,
-   puntos:0,
-  
 function salir(){
  localStorage.removeItem("usuarioActual");
  usuarioActual=null;
