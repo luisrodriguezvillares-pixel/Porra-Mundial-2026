@@ -30,6 +30,15 @@ footer{text-align:center;padding:25px;color:#93c5fd}
 </style>
 
 <script>
+ window.onerror = function(msg, url, line, col){
+  document.body.innerHTML =
+    "<div style='background:#06152b;color:white;padding:30px;font-family:Arial'>" +
+    "<h2>ERROR EN EL CÓDIGO</h2>" +
+    "<p><b>Mensaje:</b> " + msg + "</p>" +
+    "<p><b>Línea:</b> " + line + "</p>" +
+    "<p><b>Columna:</b> " + col + "</p>" +
+    "</div>";
+};
 const ADMIN_EMAIL="admin@porra.com";
 const ADMIN_PASSWORD="EspañaAdmin2026";
 
