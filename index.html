@@ -223,58 +223,25 @@ function registrar(){
  let apodo=regApodo.value.trim();
  let correo=regCorreo.value.trim().toLowerCase();
  let pass=regPass.value;
- if(!apodo||!correo||!pass)return alert("Rellena apodo, correo y contraseña");
- let d=usuarios();
- if(d[correo])return alert("Ese correo ya está registrado");
- d[correo]={apodo,correo,pass,puntos:0,estado:"Activo"};
- guardarUsuarios(d);
- usuarioActual=d[correo];
- localStorage.setItem("usuarioActual",JSON.stringify(usuarioActual));
- pantalla="inicio";
- render();
-}
 
-function iniciarSesion(){
- let login=loginCorreo.value.trim().toLowerCase();
- let pass=loginPass.value;
-
- if(login===ADMIN_EMAIL.toLowerCase() && pass===ADMIN_PASSWORD){
-   usuarioActual={apodo:"Admin",correo:ADMIN_EMAIL,admin:true,estado:"Administrador",puntos:0};
-   localStorage.setItem("usuarioActual",JSON.stringify(usuarioActual));
-   pantalla="resultados";
-   render();
+ if(!apodo||!correo||!pass){
+   alert("Rellena apodo, correo y contraseña");
    return;
  }
 
  let d=usuarios();
- let encontrado=null;
 
- for(const correoGuardado in d){
-   const u=d[correoGuardado];
-
-   if(
-     (
-       correoGuardado.toLowerCase()===login ||
-       (u.apodo||"").toLowerCase()===login
-     )
-     &&
-     u.pass===pass
-   ){
-     encontrado=u;
-     break;
-   }
- }
-
- if(!encontrado){
-   alert("No encuentro esa cuenta. Prueba con el correo o el apodo.");
+ if(d[correo]){
+   alert("Ese correo ya está registrado. Inicia sesión con ese correo o con tu apodo.");
    return;
  }
 
- usuarioActual=encontrado;
- localStorage.setItem("usuarioActual",JSON.stringify(usuarioActual));
- pantalla="inicio";
- render();
-}
+ d[correo]={
+   apodo:apodo,
+   correo:correo,
+   pass:pass,
+   puntos:0,
+  
 function salir(){
  localStorage.removeItem("usuarioActual");
  usuarioActual=null;
