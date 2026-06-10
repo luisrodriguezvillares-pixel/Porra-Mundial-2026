@@ -235,10 +235,10 @@ function registrar(){
 }
 
 function iniciarSesion(){
- let correo=loginCorreo.value.trim().toLowerCase();
+ let login=loginCorreo.value.trim().toLowerCase();
  let pass=loginPass.value;
 
- if(correo===ADMIN_EMAIL.toLowerCase() && pass===ADMIN_PASSWORD){
+ if(login===ADMIN_EMAIL.toLowerCase() && pass===ADMIN_PASSWORD){
    usuarioActual={apodo:"Admin",correo:ADMIN_EMAIL,admin:true,estado:"Administrador",puntos:0};
    localStorage.setItem("usuarioActual",JSON.stringify(usuarioActual));
    pantalla="resultados";
@@ -247,13 +247,34 @@ function iniciarSesion(){
  }
 
  let d=usuarios();
- if(!d[correo]||d[correo].pass!==pass)return alert("Correo o contraseña incorrectos");
- usuarioActual=d[correo];
+ let encontrado=null;
+
+ for(const correoGuardado in d){
+   const u=d[correoGuardado];
+
+   if(
+     (
+       correoGuardado.toLowerCase()===login ||
+       (u.apodo||"").toLowerCase()===login
+     )
+     &&
+     u.pass===pass
+   ){
+     encontrado=u;
+     break;
+   }
+ }
+
+ if(!encontrado){
+   alert("No encuentro esa cuenta. Prueba con el correo o el apodo.");
+   return;
+ }
+
+ usuarioActual=encontrado;
  localStorage.setItem("usuarioActual",JSON.stringify(usuarioActual));
  pantalla="inicio";
  render();
 }
-
 function salir(){
  localStorage.removeItem("usuarioActual");
  usuarioActual=null;
