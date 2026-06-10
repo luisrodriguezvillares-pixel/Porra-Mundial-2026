@@ -130,6 +130,7 @@ function safeJSON(key, fallback){
 }
 
 let usuarioActual=safeJSON("usuarioActual","null");
+ const root=document.getElementById("app");
 
 function usuarios(){return safeJSON("usuariosPorra","{}")}
 function guardarUsuarios(d){localStorage.setItem("usuariosPorra",JSON.stringify(d))}
@@ -659,14 +660,23 @@ function vistaClasificacion(){
 }
 
 function render(){
- if(!usuarioActual){app.innerHTML=vistaLogin();return}
- if(pantalla==="inicio")app.innerHTML=vistaInicio();
- if(pantalla==="partidos")app.innerHTML=vistaPartidos();
- if(pantalla==="apostar")app.innerHTML=vistaApostar();
- if(pantalla==="mis")app.innerHTML=vistaMis();
- if(pantalla==="clasificacion")app.innerHTML=vistaClasificacion();
- if(pantalla==="resultados")app.innerHTML=vistaResultados();
- if(pantalla==="habilitar")app.innerHTML=vistaHabilitar();
+ if(!root){
+   alert("Error: no se encuentra el div app");
+   return;
+ }
+
+ if(!usuarioActual){
+   root.innerHTML=vistaLogin();
+   return;
+ }
+
+ if(pantalla==="inicio")root.innerHTML=vistaInicio();
+ if(pantalla==="partidos")root.innerHTML=vistaPartidos();
+ if(pantalla==="apostar")root.innerHTML=vistaApostar();
+ if(pantalla==="mis")root.innerHTML=vistaMis();
+ if(pantalla==="clasificacion")root.innerHTML=vistaClasificacion();
+ if(pantalla==="resultados")root.innerHTML=vistaResultados();
+ if(pantalla==="habilitar")root.innerHTML=vistaHabilitar();
 }
 
 render();
